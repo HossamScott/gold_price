@@ -50,7 +50,6 @@ class _HomeScreenState extends State<HomeScreen> {
   late BannerAd _bottomBannerAd;
   bool _isTopBannerAdLoaded = false;
   bool _isBottomBannerAdLoaded = false;
-
   InterstitialAd? _interstitialAd;
   bool _isInterstitialAdReady = false;
 
