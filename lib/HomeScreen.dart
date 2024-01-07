@@ -21,18 +21,32 @@ class _HomeScreenState extends State<HomeScreen> {
   int? selectedNumber;
   List<int> numbers = [18, 21, 22, 24]; // List of numbers to display
   TextEditingController weightController = TextEditingController();
-  List<String> karatValues = ['10k', '12k', '14k', '16k', '18k', '21.6k', '21k', '22k', '23k', '24k', '6k', '8k', '9k'];
+  List<String> karatValues = [
+    '10k',
+    '12k',
+    '14k',
+    '16k',
+    '18k',
+    '21.6k',
+    '21k',
+    '22k',
+    '23k',
+    '24k',
+    '6k',
+    '8k',
+    '9k'
+  ];
   Map<String, String> currencySymbols = {
     'USD': '\$',
     'EUR': '€',
     'EGP': 'E£',
-    'IQD': 'IQD', 
-    'LBP': 'LBP', 
+    'IQD': 'IQD',
+    'LBP': 'LBP',
     'SAR': '﷼',
-    'MAD': 'MAD', 
-    'TND': 'TND', 
+    'MAD': 'MAD',
+    'TND': 'TND',
     'KWD': 'د.ك',
-    'DZD': 'DZD', 
+    'DZD': 'DZD',
     'BHD': 'ب.د',
     'QAR': 'ر.ق',
     'AED': 'د.إ',
@@ -144,9 +158,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void fetchDataAndResetCalculator() {
-    goldPriceFuture = GoldAPIService.fetchGoldPrice(
-            selectedCurrency ?? 'USD')
-        .then((data) {
+    goldPriceFuture =
+        GoldAPIService.fetchGoldPrice(selectedCurrency ?? 'USD').then((data) {
       if (mounted) {
         setState(() {
           lastUpdateTime = formatTimestamp(data['timestamp'] ?? 0);
@@ -165,19 +178,24 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void calculateTotal(Map<String, dynamic> data) {
-    if (selectedNumber != null && weightController.text.isNotEmpty) {
-      double weight = double.tryParse(weightController.text) ?? 0.0;
+    double weight = double.tryParse(weightController.text) ?? 0.0;  // Parse the weight input
 
-      double originalPricePerGram  = PriceCalculator.getPricePerGram(selectedNumber.toString(), data);
-      double pricePerGram = originalPricePerGram * 5; // Multiply the price by 5
+    if (selectedNumber != null && weight > 0.0) {  // Check if weight is more than 0
+      double originalPricePerGram = PriceCalculator.getPricePerGram(selectedNumber.toString(), data);
+      double pricePerGram = originalPricePerGram * 5; // Multiply the price by 5 (or your specific logic)
       double total = weight * pricePerGram;
 
       String currencySymbol = currencySymbols[selectedCurrency] ?? '';
       setState(() {
-        totalValue = '${total.toStringAsFixed(2)} $currencySymbol';
+        totalValue = '${total.toStringAsFixed(2)} $currencySymbol';  // Set the calculated total
+      });
+    } else {
+      setState(() {
+        totalValue = '0 ${currencySymbols[selectedCurrency] ?? ''}';  // Reset to 0 if weight is not valid
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -274,12 +292,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Expanded(
                                   child: dropdownContainer(selectedCurrency,
                                       (newValue) {
-                                      if (newValue != null) {
-                                        setState(() {
-                                          selectedCurrency = newValue;
-                                          fetchDataAndResetCalculator(); // Refetch data and reset calculator
-                                        });
-                                      }
+                                    if (newValue != null) {
+                                      setState(() {
+                                        selectedCurrency = newValue;
+                                        fetchDataAndResetCalculator(); // Refetch data and reset calculator
+                                      });
+                                    }
                                   }, currencySymbols.keys.toList()),
                                 ),
                                 // SizedBox(width: 5),
@@ -339,21 +357,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                       currencySymbols[selectedCurrency] ?? '';
                                   return Column(
                                     children: <Widget>[
-                                      buildPriceInfo(
-                                          '18',
-                                          data['data']['18k'],
+                                      buildPriceInfo('18', data['data']['18k'],
                                           currencySymbol),
-                                      buildPriceInfo(
-                                          '21',
-                                          data['data']['21k'],
+                                      buildPriceInfo('21', data['data']['21k'],
                                           currencySymbol),
-                                      buildPriceInfo(
-                                          '22',
-                                          data['data']['22k'],
+                                      buildPriceInfo('22', data['data']['22k'],
                                           currencySymbol),
-                                      buildPriceInfo(
-                                          '24',
-                                          data['data']['24k'],
+                                      buildPriceInfo('24', data['data']['24k'],
                                           currencySymbol),
                                     ],
                                   );
@@ -409,21 +419,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                 });
                               },
                               child: Container(
+                                width: 60,
+                                // Define a fixed width for each item
                                 margin: EdgeInsets.symmetric(horizontal: 10),
-                                padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
                                 decoration: isSelected
                                     ? BoxDecoration(
                                         gradient: LinearGradient(
                                           colors: [
                                             Color(0xFFFFFCE7),
                                             Color(0xFFDAA53F)
-                                          ], // Gold gradient
+                                          ],
                                           begin: Alignment.topCenter,
                                           end: Alignment.bottomCenter,
                                         ),
-                                        borderRadius: BorderRadius.circular(30),
+                                        shape: BoxShape
+                                            .circle, // Makes the container circular
                                       )
-                                    : null,
+                                    : BoxDecoration(
+                                        // Non-selected style: you can adjust as needed
+                                        color: Colors.transparent,
+                                      ),
                                 alignment: Alignment.center,
                                 child: Text(
                                   numbers[index].toString(),
@@ -562,11 +577,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget buildPriceInfo(String karatLabel, dynamic originalPrice, String currencySymbol) {
+  Widget buildPriceInfo(
+      String karatLabel, dynamic originalPrice, String currencySymbol) {
     // Rename the local variable to avoid conflict with the parameter
     double multipliedPrice = (originalPrice != null) ? originalPrice * 5 : 0.0;
-    String priceString =
-    (originalPrice != null) ? '$currencySymbol${multipliedPrice.toStringAsFixed(2)}' : 'N/A';
+    String priceString = (originalPrice != null)
+        ? '$currencySymbol${multipliedPrice.toStringAsFixed(2)}'
+        : 'N/A';
 
     return Container(
       height: 50,
@@ -582,7 +599,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Container(
-              padding: EdgeInsets.fromLTRB(30, 0, 30, 0),
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Color(0xFFFFFCE7), Color(0xFFDAA53F)],
@@ -596,7 +613,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Text(
                 priceString,
                 style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: Colors.black),
               ),
@@ -607,7 +624,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text(
                   '$karatLabelسعر جرام الدهب عيار ',
                   style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 15,
                       fontWeight: FontWeight.bold,
                       color: Colors.black),
                 ),

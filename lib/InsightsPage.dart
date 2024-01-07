@@ -1,24 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:gold_price/network/GoldAPIService.dart';
 import 'package:gold_price/network/MetalPriceResponse.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
-
+import 'dart:math';
+import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:intl/intl.dart';
 class InsightsPage extends StatefulWidget {
   @override
   _InsightsPageState createState() => _InsightsPageState();
 }
 
-class _InsightsPageState extends State<InsightsPage> {
+class PriceData {
+  PriceData(this.date, this.value);
+  final String date;
+  final double value;
+}
 
+class _InsightsPageState extends State<InsightsPage> {
   late BannerAd _topBannerAd;
   late BannerAd _bottomBannerAd;
   bool _isTopBannerAdLoaded = false;
   bool _isBottomBannerAdLoaded = false;
-
-  List<FlSpot>? _chartData;
+  List<PriceData>? _chartData;
   DateTime _selectedStartDate = DateTime.now().subtract(Duration(days: 7));
   DateTime _selectedEndDate = DateTime.now();
   bool _isLoading = false;
@@ -29,6 +33,7 @@ class _InsightsPageState extends State<InsightsPage> {
     TimeRangeButton(title: "3 Months", duration: Duration(days: 90)),
     TimeRangeButton(title: "6 Months", duration: Duration(days: 180)),
   ];
+
   @override
   void initState() {
     super.initState();
@@ -38,7 +43,8 @@ class _InsightsPageState extends State<InsightsPage> {
 
   BannerAd createTopBannerAd() {
     return BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111', // replace with your ad unit id for the top banner
+      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
+      // replace with your ad unit id for the top banner
       size: AdSize.banner,
       request: AdRequest(),
       listener: BannerAdListener(
@@ -53,7 +59,8 @@ class _InsightsPageState extends State<InsightsPage> {
 
   BannerAd createBottomBannerAd() {
     return BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111', // replace with your ad unit id for the bottom banner
+      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
+      // replace with your ad unit id for the bottom banner
       size: AdSize.banner,
       request: AdRequest(),
       listener: BannerAdListener(
@@ -65,29 +72,12 @@ class _InsightsPageState extends State<InsightsPage> {
       ),
     );
   }
+
   @override
   void dispose() {
     _topBannerAd.dispose();
     _bottomBannerAd.dispose();
     super.dispose();
-  }
-  Future<void> _selectDate(BuildContext context, bool isStart) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: isStart ? _selectedStartDate : _selectedEndDate,
-      firstDate: DateTime(2015, 1),
-      lastDate: DateTime.now(),
-    );
-
-    if (picked != null) {
-      setState(() {
-        if (isStart) {
-          _selectedStartDate = picked;
-        } else {
-          _selectedEndDate = picked;
-        }
-      });
-    }
   }
 
   @override
@@ -98,7 +88,6 @@ class _InsightsPageState extends State<InsightsPage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
@@ -116,7 +105,10 @@ class _InsightsPageState extends State<InsightsPage> {
                         fontSize: 20,
                       ),
                     ),
-                    Opacity(opacity: 0, child: IconButton(icon: Icon(Icons.arrow_back), onPressed: null)),
+                    Opacity(
+                        opacity: 0,
+                        child: IconButton(
+                            icon: Icon(Icons.arrow_back), onPressed: null)),
                   ],
                 ),
               ),
@@ -128,24 +120,29 @@ class _InsightsPageState extends State<InsightsPage> {
                   alignment: Alignment.center,
                 ),
               SizedBox(height: 10),
-              Center(child: Text('Please Select Range', style: TextStyle(color: Color(0xFFE0BF73)))),
-
+              Center(
+                  child: Text('Please Select Range',
+                      style: TextStyle(color: Color(0xFFE0BF73)))),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: _timeRangeButtons.map((button) {
                     return ElevatedButton(
-                      onPressed: () => _fetchAndPlotData(DateTime.now().subtract(button.duration), DateTime.now()),
+                      onPressed: () => _fetchAndPlotData(
+                          DateTime.now().subtract(button.duration),
+                          DateTime.now()),
                       child: Text(button.title),
-                      style: ElevatedButton.styleFrom(primary: Color(0xFFE0BF73)),
+                      style:
+                          ElevatedButton.styleFrom(primary: Color(0xFFE0BF73)),
                     );
                   }).toList(),
                 ),
               ),
               SizedBox(height: 10),
               if (_isLoading)
-              // Show shimmer effect while loading
+                // Show shimmer effect while loading
                 Padding(
                   padding: const EdgeInsets.all(30.0),
                   child: Shimmer.fromColors(
@@ -160,16 +157,18 @@ class _InsightsPageState extends State<InsightsPage> {
               else if (_chartData != null && _chartData!.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.all(30.0),
-                    child: MetalPriceChart(
-                        data: _chartData!,
-                        rates: _ratesData,
-                        startDate: _selectedStartDate,  // Pass the start date here
-                        endDate: _selectedEndDate      // Pass the end date here
-                    ),
+                  child: MetalPriceChart(
+                      data: _chartData!,
+                      rates: _ratesData,
+                      startDate: _selectedStartDate,
+                      // Pass the start date here
+                      endDate: _selectedEndDate // Pass the end date here
+                      ),
                 )
               else
-                Center(child: Text('No data to display', style: TextStyle(color: Colors.white))),
-
+                Center(
+                    child: Text('No data to display',
+                        style: TextStyle(color: Colors.white))),
               SizedBox(height: 30),
               if (_isBottomBannerAdLoaded)
                 Container(
@@ -185,8 +184,6 @@ class _InsightsPageState extends State<InsightsPage> {
     );
   }
 
-
-
   void _fetchAndPlotData(DateTime start, DateTime end) async {
     setState(() {
       _isLoading = true;
@@ -194,21 +191,24 @@ class _InsightsPageState extends State<InsightsPage> {
       _selectedEndDate = end;
     });
 
-    String formattedStartDate = "${_selectedStartDate.toIso8601String().split('T')[0]}";
-    String formattedEndDate = "${_selectedEndDate.toIso8601String().split('T')[0]}";
+    String formattedStartDate =
+        "${_selectedStartDate.toIso8601String().split('T')[0]}";
+    String formattedEndDate =
+        "${_selectedEndDate.toIso8601String().split('T')[0]}";
 
     try {
-      MetalPriceResponse response = await GoldAPIService.fetchMetalPriceTimeframe(formattedStartDate, formattedEndDate, "XAU","USD");
+      MetalPriceResponse response =
+      await GoldAPIService.fetchMetalPriceTimeframe(
+          formattedStartDate, formattedEndDate, "XAU", "USD");
 
-      List<FlSpot> chartData = [];
-      response.rates.forEach((date, rateMap) {
-        double xValue = DateTime.parse(date).millisecondsSinceEpoch.toDouble();
-        double yValue = rateMap['USD']?.toDouble() ?? 0;
-        chartData.add(FlSpot(xValue, yValue/ 31.1034768));
-      });
+      List<PriceData> chartData = response.rates.entries.map((entry) {
+        String date = entry.key; // Assuming the date is a string.
+        double value = entry.value['USD']?.toDouble() ?? 0; // Convert to a double.
+        return PriceData(date, value / 31.1034768); // Create a PriceData object.
+      }).toList();
 
       setState(() {
-        _chartData = chartData;
+        _chartData = chartData; // Now this is a List<PriceData>
         _isLoading = false;
       });
     } catch (e) {
@@ -218,31 +218,53 @@ class _InsightsPageState extends State<InsightsPage> {
       });
     }
   }
-
 }
+
 class TimeRangeButton {
   final String title;
   final Duration duration;
+
   TimeRangeButton({required this.title, required this.duration});
 }
+
 class MetalPriceChart extends StatelessWidget {
-  final List<FlSpot> data;
+  final List<PriceData> data;
   final Map<String, dynamic> rates;
   final DateTime startDate;
   final DateTime endDate;
 
-  MetalPriceChart({required this.data, required this.rates, required this.startDate, required this.endDate});
+  MetalPriceChart(
+      {required this.data,
+      required this.rates,
+      required this.startDate,
+      required this.endDate});
+
+  int calculateLabelInterval(double screenWidth, int dataLength) {
+    // Define base intervals for different screen widths
+    int baseInterval = screenWidth > 600 ? 1 : 4;
+
+    // Adjust the interval based on the number of data points
+    int adjustedInterval = (dataLength / 10).ceil(); // Adjust this as needed
+
+    // Choose the greater interval to avoid label clutter on small screens
+    return max(baseInterval, adjustedInterval);
+  }
 
   @override
   Widget build(BuildContext context) {
     int totalDays = endDate.difference(startDate).inDays;
-    int labelFrequency = 1;  // Show label for every day by default.
+    int labelFrequency = 1; // Show label for every day by default.
+    // Get the screen width
+    double screenWidth = MediaQuery.of(context).size.width;
+
+    // Calculate the label interval
+    int labelInterval = calculateLabelInterval(screenWidth, data.length);
 
     // Adjust label frequency based on the date range
     if (totalDays > 1 && totalDays <= 7) {
-      labelFrequency = 1;  // For 7 days or fewer, show every day
+      labelFrequency = 1; // For 7 days or fewer, show every day
     } else if (totalDays > 7 && totalDays <= 30) {
-      labelFrequency = 7;  // For more than 7 days, show weekly
+      labelFrequency = 7; // For more than 7 days, show weekly
     } else if (totalDays > 30) {
       labelFrequency = 30; // For more than 30 days, show monthly
     }
@@ -252,53 +274,51 @@ class MetalPriceChart extends StatelessWidget {
 
     return Container(
       height: 300,
-      child: LineChart(
-        LineChartData(
-          gridData: FlGridData(show: true),
-          titlesData: FlTitlesData(
-            bottomTitles: SideTitles(
-              showTitles: true,
-              rotateAngle: 45,
-              reservedSize: 30,
-              getTextStyles: (context, value) => const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-              getTitles: (value) {
-                DateTime date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
-                int dayOfYear = int.parse(DateFormat("D").format(date));
-
-                // Check if the day should be labeled and hasn't been labeled yet
-                if ((dayOfYear % labelFrequency == 0) && (dayOfYear != lastLabeledDay)) {
-                  lastLabeledDay = dayOfYear;
-                  return DateFormat("dd/MM").format(date); // Adjust format as needed
-                }
-                return ''; // Don't show a label for this date.
-              },
-              margin: 8,
-            ),
-            leftTitles: SideTitles(
-              showTitles: false,
-              getTextStyles: (context, value) => const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-              getTitles: (value) {
-                // Modify this as needed for your dataset
-                return '${value.toInt()}';
-              },
-              margin: 12,
-            ),
-          ),
-          borderData: FlBorderData(show: true),
-          lineBarsData: [
-            LineChartBarData(
-              spots: data,
-              isCurved: true,
-              colors: [Color(0xFFE0BF73)],
-              barWidth: 4,
-              isStrokeCapRound: true,
-              dotData: FlDotData(show: false),
-              belowBarData: BarAreaData(show: true),
-            ),
-          ],
+      child: SfCartesianChart(
+        primaryXAxis: CategoryAxis(
+          labelRotation: 45,
+          labelStyle: TextStyle(color: Colors.white),
+          majorGridLines: MajorGridLines(width: 0),
         ),
+        primaryYAxis: NumericAxis(
+          interval: 2,
+          numberFormat: NumberFormat("0.00"),
+          labelStyle: TextStyle(color: Colors.white),
+          majorGridLines: MajorGridLines(width: 0),
+        ),
+        legend: Legend(isVisible: false),
+        tooltipBehavior: TooltipBehavior(enable: true),
+        series: <LineSeries<PriceData, String>>[
+          LineSeries<PriceData, String>(
+            dataSource: data,
+            xValueMapper: (PriceData sales, _) => sales.date,
+            yValueMapper: (PriceData sales, _) => sales.value,
+            dataLabelSettings: DataLabelSettings(
+              isVisible: true,
+              textStyle: TextStyle(color: Colors.white),
+              // Use the builder to conditionally show labels.
+              builder: (dynamic data, dynamic point, dynamic series, int pointIndex, int seriesIndex) {
+                int totalPoints = this.data.length; // Get the total number of data points from the series data
+                int labelInterval = determineLabelInterval(totalPoints);  // Now passing totalPoints
+
+                if (pointIndex % labelInterval == 0) {  // Show label at the interval
+                  return Container(
+                    child: Text(
+                      '${(data as PriceData).value.toStringAsFixed(2)}', // 2 decimal places
+                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                  );
+                }
+                return Container(); // Empty container for other points
+              },
+            ),
+          )
+        ],
       ),
     );
   }
 }
-
+int determineLabelInterval(int totalPoints) {
+  int xLabelCount = 10; // Example: if you want 10 labels on the X-axis
+  return (totalPoints / xLabelCount).floor(); // Calculate interval
+}
