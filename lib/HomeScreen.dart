@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:gold_price/InsightsPage.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:gold_price/network/GoldAPIService.dart';
 import 'package:gold_price/PriceCalculator.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:flutter/services.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -18,7 +18,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String lastUpdateTime = ''; // Variable to store last update time
   String totalValue = '0'; // Variable to store the total calculated price
   Future<Map<String, dynamic>>? goldPriceFuture;
-  int? selectedNumber;
   List<int> numbers = [18, 21, 22, 24]; // List of numbers to display
   TextEditingController weightController = TextEditingController();
   List<String> karatValues = [
@@ -39,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, String> currencySymbols = {
     'USD': '\$',
     'EUR': '€',
-    'EGP': 'E£',
+    'EGP': 'LE',
     'IQD': 'IQD',
     'LBP': 'LBP',
     'SAR': '﷼',
@@ -52,14 +51,13 @@ class _HomeScreenState extends State<HomeScreen> {
     'AED': 'د.إ',
     'OMR': 'ر.ع.'
   };
-
   Map<String, String> metalTypeToAPIValue = {
     'Gold': 'XAU',
     'Silver': 'XAG'
     // 'Platinum': 'XPT',
     // 'Palladium': 'XPD',
   };
-
+  int? selectedNumber = 18;
   late BannerAd _topBannerAd;
   late BannerAd _bottomBannerAd;
   bool _isTopBannerAdLoaded = false;
@@ -178,24 +176,30 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void calculateTotal(Map<String, dynamic> data) {
-    double weight = double.tryParse(weightController.text) ?? 0.0;  // Parse the weight input
+    print("testtest $data");
+    double weight =
+        double.tryParse(weightController.text) ?? 0.0; // Parse the weight input
 
-    if (selectedNumber != null && weight > 0.0) {  // Check if weight is more than 0
-      double originalPricePerGram = PriceCalculator.getPricePerGram(selectedNumber.toString(), data);
-      double pricePerGram = originalPricePerGram * 5; // Multiply the price by 5 (or your specific logic)
+    if (selectedNumber != null && weight > 0.0) {
+      // Check if weight is more than 0
+      double originalPricePerGram =
+          PriceCalculator.getPricePerGram(selectedNumber.toString(), data);
+      double pricePerGram = originalPricePerGram *
+          5; // Multiply the price by 5 (or your specific logic)
       double total = weight * pricePerGram;
 
       String currencySymbol = currencySymbols[selectedCurrency] ?? '';
       setState(() {
-        totalValue = '${total.toStringAsFixed(2)} $currencySymbol';  // Set the calculated total
+        totalValue =
+            '${total.toStringAsFixed(3)} $currencySymbol'; // Set the calculated total
       });
     } else {
       setState(() {
-        totalValue = '0 ${currencySymbols[selectedCurrency] ?? ''}';  // Reset to 0 if weight is not valid
+        totalValue =
+            '0 ${currencySymbols[selectedCurrency] ?? ''}'; // Reset to 0 if weight is not valid
       });
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -378,12 +382,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       ),
+                      SizedBox(height: 10),
                       Padding(
                         padding: EdgeInsets.only(
                             left: 10.0, right: 10.0, top: 5.0, bottom: 10.0),
                         // Reduced top padding
                         child: Text(
-                          'حدد عيار الذهب',
+                          'احسب قيمه الذهب',
                           // Replace 'xxx' with the actual update time
                           style: TextStyle(
                             color: Color(0xFFF6E9C9), // Text color
@@ -393,67 +398,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ),
-                      Container(
-                        height: 60, // Define a fixed height
-                        padding: EdgeInsets.all(0.0),
-                        decoration: BoxDecoration(
-                          color: Color(0xFFF6E9C9), // Main background color
-                          borderRadius:
-                              BorderRadius.circular(15.0), // Curve radius
-                        ),
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          scrollDirection: Axis.horizontal,
-                          itemCount: numbers.length,
-                          itemBuilder: (context, index) {
-                            bool isSelected = selectedNumber == numbers[index];
-                            return GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  selectedNumber = numbers[index];
-                                  if (goldPriceFuture != null) {
-                                    goldPriceFuture!.then((data) {
-                                      calculateTotal(data);
-                                    });
-                                  }
-                                });
-                              },
-                              child: Container(
-                                width: 60,
-                                // Define a fixed width for each item
-                                margin: EdgeInsets.symmetric(horizontal: 10),
-                                decoration: isSelected
-                                    ? BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            Color(0xFFFFFCE7),
-                                            Color(0xFFDAA53F)
-                                          ],
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                        ),
-                                        shape: BoxShape
-                                            .circle, // Makes the container circular
-                                      )
-                                    : BoxDecoration(
-                                        // Non-selected style: you can adjust as needed
-                                        color: Colors.transparent,
-                                      ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  numbers[index].toString(),
-                                  style: TextStyle(
-                                    color:
-                                        isSelected ? Colors.black : Colors.grey,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      SizedBox(height: 10),
                       // Container for value and weight
                       Container(
                         padding: EdgeInsets.all(10.0),
@@ -464,98 +408,184 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         child: Column(
                           children: [
+                            // Row for the button, dropdown, and text field
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
+                                // Left half for the button - Use Center to align the button vertically
                                 Expanded(
-                                  child: Text(
-                                    'القيمة',
-                                    style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                                Container(width: 30.0),
-                                // Placeholder for the icon
-                                Expanded(
-                                  child: Text(
-                                    'الوزن/جم',
-                                    style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 10), // Spacing
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Expanded(
-                                  child: ShaderMask(
-                                    shaderCallback: (bounds) => LinearGradient(
-                                      colors: [
-                                        Color(0xFFDAA53F),
-                                        Color(0xFFDAA53F)
-                                      ], // Gold gradient
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                    ).createShader(bounds),
-                                    child: Text(
-                                      totalValue,
-                                      // This will display the calculated total
-                                      style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  margin: EdgeInsets.symmetric(horizontal: 10),
-                                  // Added margin
-                                  padding: EdgeInsets.all(5),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Color(
-                                        0xFFDAA53F), // Gold color for the background
-                                  ),
-                                  child: Icon(Icons.transform,
-                                      color: Colors.white, size: 20.0),
-                                ),
-                                Expanded(
-                                  child: TextField(
-                                    controller: weightController,
-                                    textAlign: TextAlign.center,
-                                    onChanged: (value) {
-                                      // Recalculate the total whenever the weight changes
-                                      if (goldPriceFuture != null) {
-                                        goldPriceFuture!.then((data) {
-                                          calculateTotal(data);
-                                        });
-                                      }
-                                    },
-                                    decoration: InputDecoration(
-                                      filled: true,
-                                      fillColor: Color(0xFFEBD5AF),
-                                      // Background color for the input
-                                      hintText: '0',
-                                      contentPadding:
-                                          EdgeInsets.symmetric(vertical: 10.0),
-                                      border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10.0),
-                                        borderSide: BorderSide
-                                            .none, // Remove default border
+                                  child: Container(
+                                    height: 100,
+                                    // Adjust this height to match the right side height
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Color(0xFFFFFCE7),
+                                          Color(0xFFDAA53F)
+                                        ],
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
                                       ),
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
+                                    margin: EdgeInsets.fromLTRB(0, 0, 10, 0),
+                                    child: TextButton(
+                                      onPressed: () {
+                                        if (goldPriceFuture != null) {
+                                          goldPriceFuture!.then((data) {
+                                            calculateTotal(data);
+                                          });
+                                        }
+                                      },
+                                      child: Text('احسب',
+                                          style: TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 20)),
+                                    ),
+                                  ),
+                                ),
+                                // Right half for dropdown and text field
+                                Expanded(
+                                  child: Column(
+                                    children: [
+                                      // DropdownButton with white background
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          // White background color
+                                          borderRadius:
+                                              BorderRadius.circular(10.0),
+                                          // Curve radius
+                                          border: Border.all(
+                                              color: Color(0xFFDAA53F),
+                                              width: 1), // Gold border
+                                        ),
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 10.0),
+                                        child: DropdownButton<int>(
+                                          value: selectedNumber,
+                                          isExpanded: true,
+                                          underline: SizedBox(),
+                                          onChanged: (newValue) {
+                                            if (newValue != null) {
+                                              setState(() {
+                                                selectedNumber = newValue;
+                                                if (goldPriceFuture != null) {
+                                                  goldPriceFuture!.then((data) {
+                                                    calculateTotal(data);
+                                                  });
+                                                }
+                                              });
+                                            }
+                                          },
+                                          items: numbers.map((int number) {
+                                            return DropdownMenuItem<int>(
+                                              value: number,
+                                              child: Center(
+                                                // Center align the text
+                                                child: Text(
+                                                  number.toString(),
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
+                                        ),
+                                      ),
+                                      SizedBox(height: 10),
+                                      // TextField with white background
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          // White background color
+                                          borderRadius:
+                                              BorderRadius.circular(10.0),
+                                          // Curve radius
+                                          border: Border.all(
+                                              color: Color(0xFFDAA53F),
+                                              width: 1), // Gold border
+                                        ),
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 10.0),
+                                        child: TextField(
+                                          controller: weightController,
+                                          textAlign: TextAlign.center,
+                                          keyboardType: TextInputType.number,
+                                          // Restrict keyboard to number input
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter.allow(
+                                                RegExp(r'^\d+\.?\d*')),
+                                            // Regex to allow only English numbers and decimal point
+                                          ],
+                                          // onChanged: (value) {
+                                          //   if (goldPriceFuture != null) {
+                                          //     goldPriceFuture!.then((data) {
+                                          //       calculateTotal(data);
+                                          //     });
+                                          //   }
+                                          // },
+                                          decoration: InputDecoration(
+                                            hintText: '0',
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                    vertical: 10.0),
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10.0),
+                                              borderSide: BorderSide.none,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
                             ),
+                            SizedBox(height: 10),
+                            Container(
+                              height: 1, // Height of the line
+                              color: Color(0xFFDAA53F), // Gold color for the line
+                              width: double.infinity, // Full width line
+                            ),
+                            SizedBox(height: 10),
+                            // Spacing between the row and the output value
+                            // Display the output value
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // Dynamic value on the left
+                                Expanded(
+                                  flex: 1,
+                                  child: Text(
+                                    '$totalValue',
+                                    textAlign: TextAlign.left,
+                                    // Align text to start from the left
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFFDAA53F), // Gold color
+                                      fontSize: 25,
+                                    ),
+                                  ),
+                                ),
+                                // Static text "Output Value:" on the right
+                                Expanded(
+                                  flex: 1,
+                                  child: Text(
+                                    'قيمه الذهب',
+                                    textAlign: TextAlign.right,
+                                    // Align text to start from the right
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                      fontSize: 25,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
                           ],
                         ),
                       )
@@ -582,7 +612,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // Rename the local variable to avoid conflict with the parameter
     double multipliedPrice = (originalPrice != null) ? originalPrice * 5 : 0.0;
     String priceString = (originalPrice != null)
-        ? '$currencySymbol${multipliedPrice.toStringAsFixed(2)}'
+        ? '$currencySymbol  ${multipliedPrice.toStringAsFixed(2)}'
         : 'N/A';
 
     return Container(
@@ -621,14 +651,20 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: Align(
                 alignment: Alignment.centerRight,
-                child: Text(
-                  '$karatLabelسعر جرام الدهب عيار ',
-                  style: TextStyle(
+                child: RichText(
+                  text: TextSpan(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black),
+                      color: Colors.black,
+                    ),
+                    children: <TextSpan>[
+                      TextSpan(text: '$karatLabel'),
+                      TextSpan(text: ' سعر جرام الدهب عيار'), // Space included before the text
+                    ],
+                  ),
                 ),
-              ),
+              )
             ),
           ],
         ),
