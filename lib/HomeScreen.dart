@@ -389,7 +389,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         // Reduced top padding
                         child: Text(
                           'احسب قيمه الذهب',
-                          // Replace 'xxx' with the actual update time
                           style: TextStyle(
                             color: Color(0xFFF6E9C9), // Text color
                             fontWeight: FontWeight.bold, // Bold font
@@ -398,7 +397,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ),
-                      // Container for value and weight
                       Container(
                         padding: EdgeInsets.all(10.0),
                         decoration: BoxDecoration(
@@ -408,14 +406,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         child: Column(
                           children: [
-                            // Row for the button, dropdown, and text field
                             Row(
                               children: [
-                                // Left half for the button - Use Center to align the button vertically
                                 Expanded(
                                   child: Container(
                                     height: 100,
-                                    // Adjust this height to match the right side height
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         colors: [
@@ -444,18 +439,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                 ),
-                                // Right half for dropdown and text field
                                 Expanded(
                                   child: Column(
                                     children: [
-                                      // DropdownButton with white background
                                       Container(
                                         decoration: BoxDecoration(
                                           color: Colors.white,
-                                          // White background color
                                           borderRadius:
                                               BorderRadius.circular(10.0),
-                                          // Curve radius
                                           border: Border.all(
                                               color: Color(0xFFDAA53F),
                                               width: 1), // Gold border
@@ -482,7 +473,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                             return DropdownMenuItem<int>(
                                               value: number,
                                               child: Center(
-                                                // Center align the text
                                                 child: Text(
                                                   number.toString(),
                                                   style: TextStyle(
@@ -495,7 +485,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                       ),
                                       SizedBox(height: 10),
-                                      // TextField with white background
                                       Container(
                                         decoration: BoxDecoration(
                                           color: Colors.white,
@@ -517,7 +506,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                           inputFormatters: [
                                             FilteringTextInputFormatter.allow(
                                                 RegExp(r'^\d+\.?\d*')),
-                                            // Regex to allow only English numbers and decimal point
                                           ],
                                           // onChanged: (value) {
                                           //   if (goldPriceFuture != null) {
