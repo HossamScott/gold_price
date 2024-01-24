@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:gold_price/WebViewScreen.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:gold_price/network/GoldAPIService.dart';
 import 'package:gold_price/PriceCalculator.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter/services.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -41,15 +43,15 @@ class _HomeScreenState extends State<HomeScreen> {
     'EGP': 'LE',
     'IQD': 'IQD',
     'LBP': 'LBP',
-    'SAR': '﷼',
+    'SAR': 'SAR',
     'MAD': 'MAD',
     'TND': 'TND',
-    'KWD': 'د.ك',
+    'KWD': 'KWD',
     'DZD': 'DZD',
-    'BHD': 'ب.د',
-    'QAR': 'ر.ق',
-    'AED': 'د.إ',
-    'OMR': 'ر.ع.'
+    'BHD': 'BHD',
+    'QAR': 'QAR',
+    'AED': 'AED',
+    'OMR': 'OMR'
   };
   Map<String, String> metalTypeToAPIValue = {
     'Gold': 'XAU',
@@ -74,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadInterstitialAd();
     fetchDataAndResetCalculator();
   }
+  // ca-app-pub-1118657996955561/7146624551
 
   void _loadInterstitialAd() {
     InterstitialAd.load(
@@ -231,6 +234,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           // Use the maximum space available
                           children: [
                             IconButton(
+                              icon: Icon(Icons.policy,
+                                  color: Color(0xFFE0BF73)),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => WebViewScreen(url: 'https://tichcheap.com/%D8%B3%D9%8A%D8%A7%D8%B3%D8%A9-%D8%A7%D9%84%D8%AE%D8%B5%D9%88%D8%B5%D9%8A%D8%A9/')),
+                                );
+                              },
+                            ),
+                            IconButton(
                               icon: Icon(Icons.insights,
                                   color: Color(0xFFE0BF73)),
                               onPressed: () {
@@ -253,6 +266,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                   fontWeight: FontWeight.bold,
                                   fontSize: 20,
                                 ),
+                              ),
+                            ),
+                            Opacity(
+                              opacity: 0, // Invisible icon to balance the row
+                              child: IconButton(
+                                icon:
+                                Icon(Icons.menu, color: Color(0xFFE0BF73)),
+                                onPressed: null,
                               ),
                             ),
                             Opacity(
@@ -427,6 +448,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       onPressed: () {
                                         if (goldPriceFuture != null) {
                                           goldPriceFuture!.then((data) {
+                                            FocusManager.instance.primaryFocus?.unfocus();
                                             calculateTotal(data);
                                           });
                                         }
